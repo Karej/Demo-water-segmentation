@@ -29,7 +29,7 @@ class Home(Resource):
 class RunAI(Resource):
     def __init__(self, *args):
         super().__init__(*args)
-        self.model_path = os.path.join(os.environ.get('STORAGE'),'weight','best_model.pth')
+        self.model_path = os.path.join(os.getenv('STORAGE'),'weight','best_model.pth')
         self.device= torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = torch.load(self.model_path, map_location=self.device)
         
@@ -44,7 +44,7 @@ class RunAI(Resource):
         
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(os.environ.get('STORAGE'),'image', filename))
+            file.save(os.path.join(os.getenv('STORAGE'),'image', filename))
             
             predict_one(filename, self.model, self.device)
             
