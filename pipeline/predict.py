@@ -41,17 +41,17 @@ def predict_one(path, model, device):
     :param overlay_outdir: Filepath to overlay out directory
     :return: None
     """
-    img_pil = utils.load_image_in_PIL(os.path.join(os.environ.get('STORAGE'),'image',path))
+    img_pil = utils.load_image_in_PIL(os.path.join(os.getenv('STORAGE'),'image',path))
 
     # Prediction is an PIL Image of 0s and 1s
     prediction = predict_pil(model, img_pil, model_dims=(416, 416), device=device)
 
     basename = str(Path(os.path.basename(path)).stem)
-    mask_savepth = os.path.join(os.environ.get('STORAGE'),'mask',basename + '.png')
+    mask_savepth = os.path.join(os.getenv('STORAGE'),'mask',basename + '.png')
     # mask_save = prediction.convert('RGB')
     prediction.save(mask_savepth)
 
-    over_savepth = os.path.join(os.environ.get('STORAGE'),'overlay',basename + '.png')
+    over_savepth = os.path.join(os.getenv('STORAGE'),'overlay',basename + '.png')
     img_np = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     overlay_np = utils.add_overlay(img_np, np.array(prediction))
     cv2.imwrite(over_savepth, overlay_np)
