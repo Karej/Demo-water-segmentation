@@ -4,7 +4,7 @@ flask_cors
 torch
 torchvision
 segmentation-models-pytorch==0.2.0
-cv2
+opencv-python
 pandas
 numpy
 image
