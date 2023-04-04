@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        button {display: block; margin: 0.5% 0.5% 0.5% 0.5%;}
+        label {display: block; padding: 0.5% 0.5% 0.5% 0.5%; margin-top: 1rem;}
+        textarea {display: block;}
+        .justify {display: block; padding: 2% 2% 2% 2%; margin: 0.1rem 0.1rem 0.1rem 0.1rem}
+    </style>
+</head>
+<body>
+    <div class="justify">
+        <h1>Welcome to Waternet V1.0</h1>
+        <input id="fileinput" type="file" />
+        <button onclick="submitImage()">Push</button>
+        
+        <label for="log">Response log:</label>
+        <textarea id="log" name="log" rows="10" cols="100"></textarea>
+        <div id="input_block" style="padding: 3% 3% 3% 3%;visibility:hidden;" >
+            <h2>Your input file: </h2>
+            <img id="uploadPreview" style="max-width: 512px; max-height: 512x;" />
+        </div>
+        <div id="output_block" style="padding: 3% 3% 3% 3%;visibility:hidden;">
+
+            <h2>Your Output file: </h2>
+            <div style="display:flex; gap: 10%;">
+                <div>
+                    <img id="previewMask" style="max-width: 512px; max-height: 512px;" />
+                </div>
+                <div>
+                    <img id="previewOverlay" style="max-width: 512px; max-height: 512px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        
+        function PreviewImage(filename, id) {
+          
+            document.getElementById(id).src = filename;
+            
+        };
+
+        const input = document.getElementById('fileinput');
+
+        // This will upload the file after having read it
+        const upload = (file) => {
+            var data = new FormData()
+            data.append('file', file)
+            fetch('/home/pushImage', { // Your POST endpoint
+                method: 'POST',
+                
+                body: data // This is your file object
+            })
+            .then(res => res.json())
+            .then(
+                msg => {
+                    document.getElementById('log').value = msg['message']
+                    PreviewImage('/image/'+msg['filename'],"uploadPreview")
+                    PreviewImage('/overlay/'+msg['filename'].split('.')[0]+'.png',"previewMask")
+                    PreviewImage('/mask/'+msg['filename'].split('.')[0]+'.png',"previewOverlay")
+                    document.getElementById("input_block").style.visibility = "visible";
+                    document.getElementById("output_block").style.visibility = "visible";
+                }
+            )
+            .catch((msg) => {
+                document.getElementById('log').value = "ERROR: "+msg['message']
+            });
+        };
+
+        // Event handler executed when a file is selected
+        const submitImage = () => upload(input.files[0]);
+
+
+
+        
+        
+    </script>
+</body>
+</html>

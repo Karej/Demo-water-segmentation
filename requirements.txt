@@ -1,0 +1,12 @@
+flask
+flask_restx
+flask_cors
+torch
+torchvision
+segmentation-models-pytorch==0.2.0
+cv2
+pandas
+numpy
+image
+Pillow
+gunicorn==20.1.0
