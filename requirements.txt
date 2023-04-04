@@ -8,5 +8,6 @@ opencv-python
 pandas
 numpy
 image
+scipy
 Pillow
 gunicorn==20.1.0
