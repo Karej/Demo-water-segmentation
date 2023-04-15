@@ -9,6 +9,7 @@ from torch.utils import data
 from PIL import Image
 import torchvision.transforms as tf
 from utility import utils
+from pipeline.estimate import calculate_water_depth,initialize_save_point
 
 def norm_imagenet(img_pil, dims):
     """
@@ -55,6 +56,26 @@ def predict_one(path, model, device):
     img_np = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     overlay_np = utils.add_overlay(img_np, np.array(prediction))
     cv2.imwrite(over_savepth, overlay_np)
+    
+    ############################
+    # Estimate water depth
+    # save_point = os.path.join(os.getenv('STORAGE'),'point',basename + '.csv') # sau này sẽ lấy từ database
+    # bây giờ làm tạm thế này
+    save_point = [[106, 239], [107, 345], [166, 242], [162, 337], [221, 236], [219, 329]]  # giả sử đây là list point 1
+    
+    save_point_2 = [[109, 87], [110, 233], [169, 68], [175, 234], [250, 54], [251, 224]]   # giả sử đây là list point 2
+    
+    # save_point, save_point_2 = initialize_save_point(path_img)  # đây đáng ra là bước chọn điểm
+    object_1 = 100 # giả sử đây là object 1
+    object_2 = 200 # giả sử đây là object 2
+    
+    water_depth = calculate_water_depth(prediction,object_1,object_2,save_point, save_point_2) # tính toán độ sâu nước
+    # params = {'prediction': mask img,'object_1': object_1, 'object_2': object_2, 'save_point': save_point, 'save_point_2': save_point_2}
+    
+    # đây là phần phác thảo tính độ sâu nước
+    # hiện tại ta chỉ có thể giả sử có list của các điểm đã chọn sau đó estimate
+    # Sau này nếu làm thật thì ban đầu khi set up camera thì sẽ chọn điểm rồi lưu vào database luôn, mỗi khi cần estimate thì lôi ra sài
+    # thuật toán thì ta đã nói ở trong mess 
 
 def predict_pil(model, img_pil, model_dims, device):
     """
