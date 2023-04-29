@@ -16,8 +16,10 @@ from numpy.linalg import norm
 ########################################################################
 
 # Fucntion to transform 3D mask to 2D mask
-def transform_mask_3D_to_2D(img_path):
+def transform_mask_3D_to_2D(img_path,image_size):
     water_mask = cv2.imread(img_path)
+    water_mask = cv2.resize(water_mask, image_size)
+    
     check = np.zeros(water_mask.shape[0:2])
     for i in range(water_mask.shape[0]):
         for j in range(water_mask.shape[1]):
@@ -28,72 +30,6 @@ def transform_mask_3D_to_2D(img_path):
     return water_mask
 
 
-# Function to get click point
-def get_click_point(img_path):
-    # Đọc hình ảnh
-    img = cv2.imread(img_path)
-
-    # Hiển thị hình ảnh
-    cv2.imshow('image', img)
-
-    save_point = []
-    # Hàm xử lý sự kiện click chuột
-    def mouse_callback(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            print('Tọa độ:', x, y)
-            save_point.append([x,y])
-            
-    # Gán hàm xử lý cho sự kiện click chuột
-    cv2.setMouseCallback('image', mouse_callback)
-    
-    # Chờ cho đến khi người dùng nhấn phím bất kỳ
-    cv2.waitKey(0)
-    print('list_of_point',save_point)
-    # Đóng cửa sổ hiển thị hình ảnh
-    cv2.destroyAllWindows()
-    
-    if len(save_point) <2:
-        print("Must have at least 2 points")
-        save_point = []
-        save_point = get_click_point(img_path)
-    if len(save_point) %2 != 0:
-        save_point.pop()
-    return save_point
-
-##############################################################
-##############################################################
-
-# hàm này sẽ được kích hoạt khi nước ngập hơn list ban đầu
-def get_click_point_2(img_path):
-    # Đọc hình ảnh
-    img = cv2.imread(img_path)
-
-    # Hiển thị hình ảnh
-    cv2.imshow('image', img)
-
-    save_point_2 = []
-    # Hàm xử lý sự kiện click chuột
-    def mouse_callback(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            print('Tọa độ_2 :', x, y)
-            save_point_2.append([x,y])
-                
-    # Gán hàm xử lý cho sự kiện click chuột
-    cv2.setMouseCallback('image', mouse_callback)
-    
-    # Chờ cho đến khi người dùng nhấn phím bất kỳ
-    cv2.waitKey(0)
-    print('list_of_point_2',save_point_2)
-    # Đóng cửa sổ hiển thị hình ảnh
-    cv2.destroyAllWindows()
-    
-    if len(save_point_2) <2:
-        print("Must have at least 2 points")
-        save_point_2 = []
-        save_point_2 = get_click_point(img_path)
-    if len(save_point_2) %2 != 0:
-        save_point_2.pop()
-    return save_point_2
 
 #####################################################
 #####################################################
@@ -129,16 +65,26 @@ def cal_norm_vector(point_1,point_2):
     vector = vector/np.linalg.norm(vector)
     return vector
 
+def predict_level(length):
+    if length <=10:
+        return 1
+    elif length <=30:
+        return 2
+    elif length <=50:
+        return 3
+    else:
+        return 4
+
 
 # Function to calculate the average submerged length
-def calculate_water_depth(mask_path,object_real_size, object_real_size_2, point, point_2):
+def calculate_water_depth(mask_path,image_size,object_real_size, object_real_size_2, point, point_2):
     #input: 
     #       mask_path: path of mask
     #       object_real_size: real size of object 1
     #       object_real_size_2: real size of object 2
     #       point: list of points of object 1
     #       point_2: list of points of object 2
-    water_mask = transform_mask_3D_to_2D(mask_path) # mask 3D -> 2D
+    water_mask = transform_mask_3D_to_2D(mask_path,image_size) # mask 3D -> 2D
 
     average_submerged_length = 0
     average_submerged_length_2=0
@@ -167,15 +113,13 @@ def calculate_water_depth(mask_path,object_real_size, object_real_size_2, point,
         
         average_submerged_length_2 = average_submerged_length_2/int((len(point_2)/2))
         print("length_2",average_submerged_length_2)
+        
+        level = predict_level(average_submerged_length + average_submerged_length_2 )
     
-    return average_submerged_length + average_submerged_length_2  # trung bình độ sâu chìm của các đối tượng
+    #return average_submerged_length + average_submerged_length_2  # trung bình độ sâu chìm của các đối tượng
+    return level
 
 
-# khởi tạo 2 list, list 1 chứa tọa độ các điểm đầu tiên, list 2 chứa tọa độ các điểm thứ 2
-def initialize_save_point(save_point, save_point_2,img_path):  
-    save_point = get_click_point(img_path)
-    save_point_2 = get_click_point_2(img_path)
-    return save_point, save_point_2
 
 # if __name__ == "__main__":
 #     object_real_size_1 = 100 # real size of object
@@ -188,4 +132,6 @@ def initialize_save_point(save_point, save_point_2,img_path):
 #     print(a)
     
     
-    
+
+if __name__ == "__main__":
+    estimate = cal_distance_water(filemask, object_real_size, object_real_size_2, point, point_2)
