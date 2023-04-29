@@ -48,13 +48,19 @@ def predict_one(path, model, device):
 
     basename = str(Path(os.path.basename(path)).stem)
     mask_savepth = os.path.join(os.getenv('STORAGE'),'mask',basename + '.png')
-    # mask_save = prediction.convert('RGB')
+    # mask_save = prediction.convert('RGB')f
+    # `prediction.save(mask_savepth)` is saving the predicted segmentation mask as a PNG image file at
+    # the specified file path `mask_savepth`.
     prediction.save(mask_savepth)
 
+    # This code is creating an overlay image by combining the original input image with the predicted
+    # segmentation mask.
     over_savepth = os.path.join(os.getenv('STORAGE'),'overlay',basename + '.png')
     img_np = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     overlay_np = utils.add_overlay(img_np, np.array(prediction))
     cv2.imwrite(over_savepth, overlay_np)
+
+    
 
 def predict_pil(model, img_pil, model_dims, device):
     """
