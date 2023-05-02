@@ -16,9 +16,10 @@ from numpy.linalg import norm
 ########################################################################
 
 # Fucntion to transform 3D mask to 2D mask
-def transform_mask_3D_to_2D(img_path,image_size):
-    water_mask = cv2.imread(img_path)
-    water_mask = cv2.resize(water_mask, image_size)
+def transform_mask_3D_to_2D(img_mask_path,img_original):
+    water_mask = cv2.imread(img_mask_path)
+    image_size = cv2.imread(img_original).shape
+    water_mask = cv2.resize(water_mask, (image_size[1],image_size[0]))
     
     check = np.zeros(water_mask.shape[0:2])
     for i in range(water_mask.shape[0]):
@@ -67,24 +68,24 @@ def cal_norm_vector(point_1,point_2):
 
 def predict_level(length):
     if length <=10:
-        return 1
+        return 0
     elif length <=30:
-        return 2
+        return 1
     elif length <=50:
-        return 3
+        return 2
     else:
-        return 4
+        return 3
 
 
 # Function to calculate the average submerged length
-def calculate_water_depth(mask_path,image_size,object_real_size, object_real_size_2, point, point_2):
+def calculate_water_depth(mask_path,image_path,object_real_size, object_real_size_2, point, point_2):
     #input: 
     #       mask_path: path of mask
     #       object_real_size: real size of object 1
     #       object_real_size_2: real size of object 2
     #       point: list of points of object 1
     #       point_2: list of points of object 2
-    water_mask = transform_mask_3D_to_2D(mask_path,image_size) # mask 3D -> 2D
+    water_mask = transform_mask_3D_to_2D(mask_path,image_path) # mask 3D -> 2D
 
     average_submerged_length = 0
     average_submerged_length_2=0
@@ -114,7 +115,7 @@ def calculate_water_depth(mask_path,image_size,object_real_size, object_real_siz
         average_submerged_length_2 = average_submerged_length_2/int((len(point_2)/2))
         print("length_2",average_submerged_length_2)
         
-        level = predict_level(average_submerged_length + average_submerged_length_2 )
+    level = predict_level(average_submerged_length + average_submerged_length_2 )
     
     #return average_submerged_length + average_submerged_length_2  # trung bình độ sâu chìm của các đối tượng
     return level

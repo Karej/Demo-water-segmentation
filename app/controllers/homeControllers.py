@@ -4,12 +4,14 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import os
 import base64
+import json
+
 from utility import utils
-
-
 from pipeline.predict import predict_one
 from pipeline.estimate import calculate_water_depth
+from config.socket.socket import socketio
 import torch
+
 
 api = Namespace('home', description='home page')
 
@@ -21,7 +23,7 @@ upload_parser.add_argument('file', location='files',
 ALLOWED_EXTENSIONS = ['jpg', 'png', 'jpeg']
 
 
-model_path = os.path.join(os.getenv('STORAGE'),'weight','best_model.pth')
+model_path = os.path.join(os.environ.get('STORAGE'),'weight','best_model.pth')
 device= torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = torch.load(model_path, map_location=device)
 
@@ -34,6 +36,11 @@ def allowed_file(filename):
 class Home(Resource):
     def get(self):
         return make_response(render_template('home.html'))
+
+@api.route('/track')
+class Home(Resource):
+    def get(self):
+        return make_response(render_template('track.html'))
 
 @api.route('/pushImage')
 class RunAI(Resource):
@@ -57,33 +64,6 @@ class RunAI(Resource):
             
             predict_one(filename, self.model, self.device)
             
-            
-            # list_1 = os.listdir(os.path.join(os.environ.get('STORAGE'),'list1'))  # này Đồng tự thiết kế database để lưu các điểm nha
-            # list_2 = os.listdir(os.path.join(os.environ.get('STORAGE'),'list2'))
-            # length_object_1 = os.path.join(os.environ.get('STORAGE'),'length_object_1') # cm
-            # length_object_2 = os.path.join(os.environ.get('STORAGE'),'length_object_2') # cm
-            
-            
-            # đây là mẫu cho ảnh 1
-            list_1 = [[118, 523], [119, 632], [387, 510], [391, 617], [451, 506], [452, 613], [1140, 470], [1140, 550], [1201, 469], [1201, 551], [1262, 466], [1261, 549], [59, 526], [58, 636]]
-            list_2 = [[391, 333], [393, 506], [512, 335], [511, 502], [90, 322], [90, 522], [1230, 343], [1232, 467]]
-            length_object_1 = 50 # cm
-            length_object_2 = 200 # cm
-            
-            # đây là mẫu cho ảnh 2
-            # list_1 = [[61, 143], [59, 210], [122, 145], [120, 209], [181, 143], [181, 209], [661, 141], [660, 210], [721, 143], [721, 216], [750, 141], [751, 219], [780, 140], [781, 215]]
-            # list_2 = [[570, 29], [572, 98], [601, 28], [600, 98], [631, 26], [631, 97], [541, 29], [541, 101]]
-            # length_object_1 = 50 # cm
-            # length_object_2 = 200 # cm
-            ###########################
-            
-            # image = utils.load_image_in_PIL(os.path.join(os.getenv('STORAGE'),'image',filename))
-            # mask_size = (image.size[1],image.size[0])
-            mask_size = (1552,809)  # cái này để resize lại mask
-            
-            
-            level = calculate_water_depth(filename_mask,mask_size,length_object_1, length_object_2, list_1, list_2)
-            
             resp = jsonify({'message' : 'successfully', 'filename': filename})
             resp.status_code = 201
             return resp
@@ -103,11 +83,25 @@ class HandleMainBackend(Resource):
         
     def post(self):
         data = request.get_json()
-        image_name = f'record_{data["deviceID"]}.jpg'
-        with open(f'{os.environ.get("STORAGE")}/image/{image_name}', "wb") as f:
+        image_name = f'record_{data["deviceID"]}'
+        with open(f'{os.environ.get("STORAGE")}/image/{image_name}.jpg', "wb") as f:
             image = base64.decodebytes(data["image"].encode())
             f.write(image)
             print("Image Received")
-        predict_one(image_name, self.model, self.device)
-        return {"msg": "done"}
+        predict_one(f"{image_name}.jpg", self.model, self.device)
+        filename_mask = f'{os.environ.get("STORAGE")}/mask/{image_name}.png'
+        origin_image = f'{os.environ.get("STORAGE")}/image/{image_name}.jpg'
+        
+        
+        parseJson = json.loads(data["info"])
+        
+        list_1 =  parseJson[0]
+        list_2 =  parseJson[1]
+        length_object_1 = parseJson[2] # cm
+        length_object_2 = parseJson[3] # cm
+        
+        level = calculate_water_depth(filename_mask,origin_image,length_object_1, length_object_2, list_1, list_2)
+        updateData = {'filename': image_name, 'level': level}
+        socketio.emit('currentEvent', updateData, broadcast=True)
+        return {"success": 1, "level": 1}
                

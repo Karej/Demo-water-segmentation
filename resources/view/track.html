@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        button {display: block; margin: 0.5% 0.5% 0.5% 0.5%;}
+        label {display: block; padding: 0.5% 0.5% 0.5% 0.5%; margin-top: 1rem;}
+        textarea {display: block;}
+        .justify {display: block; padding: 2% 2% 2% 2%; margin: 0.1rem 0.1rem 0.1rem 0.1rem}
+    </style>
+</head>
+<body>
+    <div class="justify">
+        <h1>Dashboard tracking on WaternetV1.0 server</h1>
+       
+        
+        <div id="input_block" style="padding: 3% 3% 3% 3%;visibility:hidden;" >
+            <h2>Input file: </h2>
+            <img id="uploadPreview" style="max-width: 512px; max-height: 512x;" />
+        </div>
+        <div id="output_block" style="padding: 3% 3% 3% 3%;visibility:hidden;">
+
+            <h2>Your Output file: </h2>
+            <h3>Flood Level: <span id="water_level">0</span></h3>
+            <div style="display:flex; gap: 10%;">
+                <div>
+                    <img id="previewMask" style="max-width: 512px; max-height: 512px;" />
+                </div>
+                <div>
+                    <img id="previewOverlay" style="max-width: 512px; max-height: 512px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function PreviewImage(filename, id) {
+          
+            document.getElementById(id).src = filename;
+            
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io('/');
+        socket.on('currentEvent', function(msg) {
+            PreviewImage('/image/'+msg['filename']+'.jpg',"uploadPreview")
+            PreviewImage('/overlay/'+msg['filename']+'.png',"previewMask")
+            PreviewImage('/mask/'+msg['filename']+'.png',"previewOverlay")
+            document.getElementById("input_block").style.visibility = "visible";
+            document.getElementById("output_block").style.visibility = "visible";
+            document.getElementById("water_level").innerText = msg['level'];
+        });
+    </script>
+   
+</body>
+</html>
