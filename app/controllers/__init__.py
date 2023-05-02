@@ -7,7 +7,7 @@ api = Api(
     title='Register Server',
     version='1.0',
     description='A description',
-    doc=False,
+    
     # All API metadatas
 )
 
