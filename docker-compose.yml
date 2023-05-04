@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  app:
+    image: ledong0110/waternet_hcmut:v1
+    volumes:
+      - type: bind
+        source: ${STORAGE}
+        target: /opt/app/storage
+      
+    ports:
+      - "${PUBLIC_PORT}:8000"
+    restart: unless-stopped
+    environment:
+      - FLASK_RUN_PORT=8000
+      - STORAGE=/opt/app/storage

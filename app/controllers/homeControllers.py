@@ -102,6 +102,6 @@ class HandleMainBackend(Resource):
         
         level = calculate_water_depth(filename_mask,origin_image,length_object_1, length_object_2, list_1, list_2)
         updateData = {'filename': image_name, 'level': level}
-        socketio.emit('currentEvent', updateData, broadcast=True)
+        socketio.emit('currentEvent', updateData)
         return {"success": 1, "level": 1}
                

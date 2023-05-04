@@ -10,7 +10,7 @@ from config.socket.socket import socketio
 from utility.socket_management import *
 
 
-app = Flask(__name__, static_url_path='', static_folder='storage',template_folder='resources/view')
+app = Flask(__name__, static_url_path='', static_folder=f'{os.environ.get("STORAGE")}',template_folder='resources/view')
 CORS(app)
 
 app.config['PROPAGATE_EXCEPTIONS'] = True
