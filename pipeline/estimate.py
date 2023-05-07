@@ -2,6 +2,14 @@ import numpy as np
 import cv2
 import math
 from numpy.linalg import norm
+import os
+
+from pathlib import Path
+from torch.utils import data
+# import albumentations as album
+from PIL import Image
+import torchvision.transforms as tf
+from utility import utils
 
 
 #########################################################################
@@ -16,11 +24,27 @@ from numpy.linalg import norm
 ########################################################################
 
 # Fucntion to transform 3D mask to 2D mask
-def transform_mask_3D_to_2D(img_mask_path,img_original):
+def transform_mask_3D_to_2D(img_mask_path,img_original,list_1,list_2):
     water_mask = cv2.imread(img_mask_path)
-    image_size = cv2.imread(img_original).shape
+    image = cv2.imread(img_original)
+    image_size = image.shape
     water_mask = cv2.resize(water_mask, (image_size[1],image_size[0]))
     
+    basename = str(Path(os.path.basename(img_original)).stem)
+    over_savepth = os.path.join(os.getenv('STORAGE'),'depth_estimation',basename + '.png')
+    image = utils.add_overlay(image, np.array(water_mask))
+    
+    
+    for i in range(0,int(len(list_1)/2)+2,2):  # vẽ line
+        cv2.line(image, list_1[i], list_1[i+2], (0, 0, 255), 6)
+        cv2.line(image, list_1[i+1], list_1[i+3], (0, 0, 255), 6)
+        
+    for i in range(0,int(len(list_2)/2)+2,2):  # vẽ line
+        cv2.line(image, list_2[i], list_2[i+2], (0, 0, 255), 6)
+        cv2.line(image, list_2[i+1], list_2[i+3], (0, 0, 255), 6)
+        
+    cv2.imwrite(over_savepth, image)
+        
     check = np.zeros(water_mask.shape[0:2])
     for i in range(water_mask.shape[0]):
         for j in range(water_mask.shape[1]):
@@ -85,7 +109,7 @@ def calculate_water_depth(mask_path,image_path,object_real_size, object_real_siz
     #       object_real_size_2: real size of object 2
     #       point: list of points of object 1
     #       point_2: list of points of object 2
-    water_mask = transform_mask_3D_to_2D(mask_path,image_path) # mask 3D -> 2D
+    water_mask = transform_mask_3D_to_2D(mask_path,image_path,point,point_2) # mask 3D -> 2D
 
     average_submerged_length = 0
     average_submerged_length_2=0
@@ -132,7 +156,3 @@ def calculate_water_depth(mask_path,image_path,object_real_size, object_real_siz
 #     a  = calculate_water_depth('mask.png',object_real_size_1, object_real_size_2, save_point, save_point_2)
 #     print(a)
     
-    
-
-if __name__ == "__main__":
-    estimate = cal_distance_water(filemask, object_real_size, object_real_size_2, point, point_2)
