@@ -41,7 +41,7 @@
         
         function PreviewImage(filename, id) {
           
-            document.getElementById(id).src = filename;
+            document.getElementById(id).src = filename+"?"+ new Date().getTime();;
             
         };
 

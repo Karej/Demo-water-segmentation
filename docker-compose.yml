@@ -7,7 +7,7 @@ services:
       - type: bind
         source: ${STORAGE}
         target: /opt/app/storage
-      
+    
     ports:
       - "${PUBLIC_PORT}:8000"
     restart: unless-stopped

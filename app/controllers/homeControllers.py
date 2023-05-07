@@ -83,6 +83,7 @@ class HandleMainBackend(Resource):
         
     def post(self):
         data = request.get_json()
+        
         image_name = f'record_{data["deviceID"]}'
         with open(f'{os.environ.get("STORAGE")}/image/{image_name}.jpg', "wb") as f:
             image = base64.decodebytes(data["image"].encode())
