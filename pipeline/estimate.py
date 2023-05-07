@@ -32,7 +32,10 @@ def transform_mask_3D_to_2D(img_mask_path,img_original,list_1,list_2):
     
     basename = str(Path(os.path.basename(img_original)).stem)
     over_savepth = os.path.join(os.getenv('STORAGE'),'depth_estimation',basename + '.png')
-    image = utils.add_overlay(image, np.array(water_mask))
+    overlay_path = os.path.join(os.getenv('STORAGE'),'overlay',basename + '.png')
+    overlay_image = cv2.imread(overlay_path)
+    
+    image = overlay_image
     
     
     for i in range(0,int(len(list_1)/2)+2,2):  # vẽ line
